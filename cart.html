@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Cart — Flipkart Clone</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner"></div>
+</header>
+
+<main class="page">
+  <h1>My Cart</h1>
+  <div id="cart-root"></div>
+</main>
+
+<footer class="footer"></footer>
+
+<script src="app.js"></script>
+<script>
+  function renderCart() {
+    const root = document.getElementById("cart-root");
+    const lines = cartLines();
+
+    if (!lines.length) {
+      root.innerHTML = `<div class="panel empty">
+        <h2>Your cart is empty</h2>
+        <p>Add items to it now.</p>
+        <a class="btn btn-blue" href="index.html">Shop now</a>
+      </div>`;
+      return;
+    }
+
+    const t = cartTotals();
+    root.innerHTML = `<div class="cart-layout">
+      <div class="panel">
+        ${lines.map(l => `<div class="cart-item">
+          <img src="${l.img}" alt="${l.name}">
+          <div>
+            <h3>${l.name}</h3>
+            <div><span class="price">${money(l.price)}</span><span class="mrp">${money(l.mrp)}</span></div>
+            <div class="qty">
+              <button type="button" onclick="changeQty(${l.id}, ${l.qty - 1})" aria-label="Decrease quantity">−</button>
+              <span>${l.qty}</span>
+              <button type="button" onclick="changeQty(${l.id}, ${l.qty + 1})" aria-label="Increase quantity">+</button>
+              <button type="button" class="link-btn" onclick="changeQty(${l.id}, 0)">Remove</button>
+            </div>
+          </div>
+        </div>`).join("")}
+      </div>
+      <aside class="panel">
+        <h4>Price Details</h4>
+        <div class="summary-row"><span>Price (${t.items} item${t.items > 1 ? "s" : ""})</span><span>${money(t.mrp)}</span></div>
+        <div class="summary-row"><span>Discount</span><span style="color:var(--green)">− ${money(t.discount)}</span></div>
+        <div class="summary-row"><span>Delivery Charges</span><span>${t.delivery ? money(t.delivery) : "Free"}</span></div>
+        <div class="summary-row summary-total"><span>Total Amount</span><span>${money(t.total)}</span></div>
+        <a class="btn btn-primary" style="display:block;text-align:center" href="payment.html">Place Order</a>
+      </aside>
+    </div>`;
+  }
+
+  function changeQty(id, qty) {
+    setQty(id, qty);
+    renderCart();
+  }
+
+  renderHeader("cart");
+  renderCart();
+  renderFooter();
+</script>
+</body>
+</html>
