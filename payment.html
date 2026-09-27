@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment — Flipkart Clone</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner"></div>
+</header>
+
+<main class="page">
+  <h1>Payment</h1>
+  <div id="pay-root"></div>
+</main>
+
+<footer class="footer"></footer>
+
+<script src="app.js"></script>
+<script>
+  function renderPayment() {
+    const root = document.getElementById("pay-root");
+    const t = cartTotals();
+
+    if (!t.items) {
+      root.innerHTML = `<div class="panel empty">
+        <h2>No items to pay for</h2>
+        <a class="btn btn-blue" href="index.html">Continue shopping</a>
+      </div>`;
+      return;
+    }
+
+    root.innerHTML = `<div class="cart-layout">
+      <form class="panel" id="pay-form" novalidate>
+        <h4>Choose a payment method</h4>
+
+        <label class="pay-option">
+          <input type="radio" name="method" value="card" checked> Credit / Debit Card
+        </label>
+        <div class="pay-fields" id="card-fields">
+          <div class="field full">
+            <label for="card-number">Card Number</label>
+            <input id="card-number" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456">
+          </div>
+          <div class="field">
+            <label for="card-expiry">Expiry (MM/YY)</label>
+            <input id="card-expiry" maxlength="5" placeholder="09/28">
+          </div>
+          <div class="field">
+            <label for="card-cvv">CVV</label>
+            <input id="card-cvv" inputmode="numeric" maxlength="4" placeholder="123">
+          </div>
+          <div class="field full">
+            <label for="card-name">Name on Card</label>
+            <input id="card-name" placeholder="Shubham Kumar">
+          </div>
+        </div>
+
+        <label class="pay-option" style="margin-top:14px">
+          <input type="radio" name="method" value="upi"> UPI
+        </label>
+        <div class="pay-fields" id="upi-fields" hidden>
+          <div class="field full">
+            <label for="upi-id">UPI ID</label>
+            <input id="upi-id" placeholder="name@upi">
+          </div>
+        </div>
+
+        <label class="pay-option" style="margin-top:14px">
+          <input type="radio" name="method" value="cod"> Cash on Delivery
+        </label>
+
+        <p class="error" id="pay-error"></p>
+        <button class="btn btn-primary" type="submit">Pay ${money(t.total)}</button>
+      </form>
+
+      <aside class="panel">
+        <h4>Price Details</h4>
+        <div class="summary-row"><span>Price (${t.items} item${t.items > 1 ? "s" : ""})</span><span>${money(t.mrp)}</span></div>
+        <div class="summary-row"><span>Discount</span><span style="color:var(--green)">− ${money(t.discount)}</span></div>
+        <div class="summary-row"><span>Delivery Charges</span><span>${t.delivery ? money(t.delivery) : "Free"}</span></div>
+        <div class="summary-row summary-total"><span>Total Payable</span><span>${money(t.total)}</span></div>
+      </aside>
+    </div>`;
+
+    const form = document.getElementById("pay-form");
+    form.addEventListener("change", toggleFields);
+    form.addEventListener("submit", submitPayment);
+    toggleFields();
+  }
+
+  function selectedMethod() {
+    const checked = document.querySelector('input[name="method"]:checked');
+    return checked ? checked.value : "card";
+  }
+
+  function toggleFields() {
+    const method = selectedMethod();
+    document.getElementById("card-fields").hidden = method !== "card";
+    document.getElementById("upi-fields").hidden = method !== "upi";
+  }
+
+  function digits(value) {
+    return value.replace(/\D/g, "");
+  }
+
+  function validate() {
+    const method = selectedMethod();
+    if (method === "card") {
+      const number = digits(document.getElementById("card-number").value);
+      const expiry = document.getElementById("card-expiry").value.trim();
+      const cvv = digits(document.getElementById("card-cvv").value);
+      const name = document.getElementById("card-name").value.trim();
+      if (number.length < 12) return "Enter a valid card number.";
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) return "Enter expiry as MM/YY.";
+      if (cvv.length < 3) return "Enter a valid CVV.";
+      if (!name) return "Enter the name on the card.";
+    }
+    if (method === "upi" && !/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(document.getElementById("upi-id").value.trim())) {
+      return "Enter a valid UPI ID (e.g. name@upi).";
+    }
+    return "";
+  }
+
+  function submitPayment(event) {
+    event.preventDefault();
+    const error = validate();
+    const errorEl = document.getElementById("pay-error");
+    if (error) {
+      errorEl.textContent = error;
+      return;
+    }
+    errorEl.textContent = "";
+    const total = cartTotals().total;
+    saveCart([]);
+    document.getElementById("pay-root").innerHTML = `<div class="panel success">
+      <div class="tick">✓</div>
+      <h2>Order placed successfully</h2>
+      <p>${money(total)} paid via ${selectedMethod().toUpperCase()}. Delivery in 3-4 days.</p>
+      <a class="btn btn-blue" href="index.html">Continue shopping</a>
+    </div>`;
+  }
+
+  renderHeader("payment");
+  renderPayment();
+  renderFooter();
+</script>
+</body>
+</html>
